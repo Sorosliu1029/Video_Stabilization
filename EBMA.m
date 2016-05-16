@@ -96,8 +96,8 @@ for index=1:1:nf-1
             % record block motion vector
             iblk = floor((i-1)/s)+1;
             jblk = floor((j-1)/s)+1;
-            mvx(iblk, jblk) = dx/accuracy-j;
-            mvy(iblk, jblk) = dy/accuracy-i;
+            mvx(iblk, jblk) = round(dx/accuracy)-j;
+            mvy(iblk, jblk) = round(dy/accuracy)-i;
             mean_an_f = mean(mean(an_f(i:i+s-1, j:j+s-1)));
             MBMAD(iblk, jblk) = sum(sum(abs(an_f(i:i+s-1, j:j+s-1)-...
                 mean_an_f))) / s^2;
@@ -110,8 +110,4 @@ for index=1:1:nf-1
     mvmad(:,:,index) = MVMAD;
 end;
 mvfs = struct('mvx', mvxfs, 'mvy', mvyfs, 'mad', madfs, 'mvmad', mvmad);
-                   
-                    
-                        
-    
-    
+end
