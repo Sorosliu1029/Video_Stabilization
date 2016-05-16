@@ -7,6 +7,9 @@ function [mvfs] = EBMA(movie, r, accuracy, sf, nf, s)
 % sf: start frame
 % nf: number of frames
 % s: match block size
+%
+% output result
+% mvfs: motion vectors for all frames
 
 %% initialize variables
 fs = read(movie, [sf, sf+nf-1]);         % frame sequence of interest
@@ -76,10 +79,12 @@ for index=1:1:nf-1
                         start_point(2) = w*accuracy-s*accuracy+1;
                     end;
                     
+                    % calcuate MAD for this block
                     MAD = sum(sum(abs(an_f(i:i+s-1, j:j+s-1)-...
                         ta_f(start_point(1):accuracy:end_point(1), ...
                         start_point(2):accuracy:end_point(2))))) / s^2;
                     
+                    % update MAD_min and motion vector [dx, dy]
                     if (MAD < MAD_min)
                         MAD_min = MAD;
                         dy = start_point(1);
@@ -88,6 +93,7 @@ for index=1:1:nf-1
                 end;
             end;
             
+            % record block motion vector
             iblk = floor((i-1)/s)+1;
             jblk = floor((j-1)/s)+1;
             mvx(iblk, jblk) = dx/accuracy-j;
