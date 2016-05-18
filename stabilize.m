@@ -15,11 +15,16 @@ movie = VideoReader(read_video_path);
 %% calculate block motion vectors for all frames
 mvfs = EBMA(movie, range, accuracy, start_frame, num_frames, block_size);
 toc
-
+save mvfs.mat -struct mvfs;
 mvx = mvfs.mvx;
 mvy = mvfs.mvy;
 mad = mvfs.mad;
 mvmad = mvfs.mvmad;
+
+%% show motion vector between two frames
+frame_idx = 5;
+visualise_BMV(movie, mvx(:,:,frame_idx), mvy(:,:,frame_idx), ...
+    frame_idx+start_frame-1, block_size);
 
 %% Deal with each frame
 % initialize

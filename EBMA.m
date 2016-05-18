@@ -3,7 +3,7 @@ function [mvfs] = EBMA(movie, r, accuracy, sf, nf, s)
 % input parameters
 % movie: original frame sequence
 % r: search range
-% accuracy: search step
+% accuracy: search step, 1 for integer pel, 2 for half pel
 % sf: start frame
 % nf: number of frames
 % s: match block size
@@ -25,8 +25,8 @@ mvmad = mvxfs;
 for index=1:1:nf-1
     % ta_f : target frame
     % an_f : anchor frame
-    ta_f = fs(:,:,1,index);
-    an_f = fs(:,:,1,index+1);
+    ta_f = rgb2gray(fs(:,:,:,index));
+    an_f = rgb2gray(fs(:,:,:,index+1));
     
     if (r > s-1)
         r = s - 1;
