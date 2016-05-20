@@ -1,0 +1,120 @@
+\documentclass[a4paper, twocolumn]{article}
+
+\usepackage[sc]{mathpazo} % Use the Palatino font
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\linespread{1.05} % Line spacing - Palatino needs more space between lines
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[english]{babel} % Language hyphenation and typographical rules
+
+\usepackage[hmarginratio=1:1,top=32mm,left=20mm,right=20mm,columnsep=20pt]{geometry} % Document margins
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+
+\usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+
+\usepackage{enumitem} % Customized lists
+\setlist[itemize]{noitemsep} % Make itemize lists more compact
+
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\itshape\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont} % Set the abstract itself to small italic text
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
+\renewcommand\thesubsection{\roman{subsection}} % roman numerals for subsections
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{} % Blank out the default header
+\fancyfoot{} % Blank out the default footer
+\fancyhead[C]{\emph{Digital Image Processing 2016} Course Project Report}
+\fancyfoot[RO,LE]{\thepage} % Custom footer text
+
+\usepackage{titling} % Customizing the title section
+
+\usepackage{hyperref} % For hyperlinks in the PDF
+\hypersetup{hidelinks}
+
+\usepackage{graphicx}
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\setlength{\droptitle}{-4\baselineskip} % Move the title up
+
+\pretitle{\begin{center}\Huge\bfseries} % Article title formatting
+	\posttitle{\end{center}} % Article title closing formatting
+\title{Video Stabilization using Block Matching Algorithm} % Article title
+\author{%
+	\textsc{Liu Yang} \\[1ex] % Your name
+	\normalsize Fudan University \\ % Your institution
+	\normalsize \href{mailto:13307130167@fudan.edu.cn}{13307130167@fudan.edu.cn} % Your email address
+}
+\date{\today} % Leave empty to omit a date
+\renewcommand{\maketitlehookd}{%
+\begin{abstract}
+%	\noindent
+	\textbf{
+		This report presents a video stabilization method based on block matching algorithm. It discusses a typical block matching algorithm -- EBMA, and compares EBMA with some faster block matching algorithm, along with algorithm implement results in MATLAB code.
+	}
+\end{abstract}
+}
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+	
+	% Print the title
+	\maketitle
+	
+	%----------------------------------------------------------------------------------------
+%		ARTICLE CONTENTS
+	%----------------------------------------------------------------------------------------
+	\section{Introduction}
+	
+	\lettrine[nindent=0em,lines=3]{V} ideo stabilization is a key problem in producing high quality video sequence, especially when we are in self-media age and much more videos are shot with smart phones, which means video stabilization is in great demand. \\
+	Typically, there are three steps in video stabilization workflow: 
+	
+	\begin{itemize}
+		\item motion estimation
+		\item shaking recognition
+		\item motion compensation
+	\end{itemize}
+	\noindent
+	Among all three steps, the most computationally expensive and resource consumed one is motion estimation. Some mature models are discussed in \cite{vpc}: based on optical flow, based on pixel, based on block, based on mesh, etc. \\
+	This report and video stabilization implement focus on block-based algorithm, start with naive and slow EBMA, to some other improved and faster algorithm. The algorithms that have been implemented are Exhaustive Block Matching Algorithm (EBMA), 2-D Log Search Method (a.k.a Diamond Search, DS), Three-Step Search Method (TSS). Multi-Resolution Motion Estimation with Hierarchical Block Matching Algorithm (HBMA) is also briefly introduced. Section II explains how these algorithms work. Section III makes a comparison between these algorithms and show video stabilization result. 
+	
+	%------------------------------------------------
+	
+	\section{Block Matching Algorithm}
+	
+	
+	%------------------------------------------------
+	
+	\section{Comparison and Experiment}
+	
+	
+	%------------------------------------------------
+	
+	\section{Conclusion}
+	
+	
+	%----------------------------------------------------------------------------------------
+	%	REFERENCE LIST
+	%----------------------------------------------------------------------------------------
+	
+	\begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
+		
+		\bibitem[Video Processing and Communications, Chap. 6]{vpc}
+		Wang Y, Ostermann J, Zhang Y Q. 
+		\newblock {\em Video processing and communications[M]. Chap. 6: Two Dimensional Motion Estimation}  
+		\newblock Upper Saddle River: Prentice Hall, 2002.
+		
+	\end{thebibliography}
+	
+	%----------------------------------------------------------------------------------------
+	
+\end{document}
