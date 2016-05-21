@@ -59,7 +59,7 @@
 \begin{abstract}
 %	\noindent
 	\textbf{
-		This report presents a video stabilization method based on block matching algorithm. It discusses a typical block matching algorithm -- EBMA, and compares EBMA with some faster block matching algorithm, along with algorithm implement results in MATLAB code.
+		This report presents a video stabilization method based on block matching algorithm. It discusses a typical block matching algorithm -- EBMA, and compares EBMA with some faster block matching algorithm, along with video stabilization implement result in MATLAB code.
 	}
 \end{abstract}
 }
@@ -85,18 +85,102 @@
 	\end{itemize}
 	\noindent
 	Among all three steps, the most computationally expensive and resource consumed one is motion estimation. Some mature models are discussed in \cite{vpc}: based on optical flow, based on pixel, based on block, based on mesh, etc. \\
-	This report and video stabilization implement focus on block-based algorithm, start with naive and slow EBMA, to some other improved and faster algorithm. The algorithms that have been implemented are Exhaustive Block Matching Algorithm (EBMA), 2-D Log Search Method (a.k.a Diamond Search, DS), Three-Step Search Method (TSS). Multi-Resolution Motion Estimation with Hierarchical Block Matching Algorithm (HBMA) is also briefly introduced. Section II explains how these algorithms work. Section III makes a comparison between these algorithms and show video stabilization result. 
+	This report and video stabilization implement focus on block-based algorithm, start with naive and slow EBMA, to some other improved and faster algorithm. The algorithms that have been implemented are Exhaustive Block Matching Algorithm (EBMA), 2-D Log Search Method (a.k.a Diamond Search, DS), Three-Step Search Method (TSS). Multi-Resolution Motion Estimation with Hierarchical Block Matching Algorithm (HBMA) is also briefly introduced. Section II explains how these algorithms work. Section III makes a comparison between these algorithms. Section IV presents a way to recognize shaking and shows the video stabilization result with motion compensation.
 	
 	%------------------------------------------------
 	
 	\section{Block Matching Algorithm}
+	Considering motion estimation between two given frames, $ \psi(x,y, t_{1}) $ and $ \psi(x,y,t_{2}) $, we define motion vector (MV) at \textbf{x} between time $ t_{1} $ and $ t_{2} $ is the displacement of this point from $ t_{1} $ to $ t_{2} $. We will call the frame at time $ t_{1} $ the anchor frame, and the frame at time $ t_{2} $ the tracked frame. The anchor frame can be either before or after the tracked frame, as illustrated in Figure \ref{fig:backwards}. It is forward motion estimation when $ t_{1} < t_{2} $ while backward motion estimation when $ t_{1} > t_{2} $. We use $ \psi_{1}(\textbf{x}) $ to denote anchor frame and $ \psi_{2}(\textbf{x}) $ to denote tracked frame. \\
+	In this report and the implement, we use backward motion estimation.
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{backwards}
+	\caption{Forward and backward motion estimation}
+	\label{fig:backwards}
+	\end{figure}
+
+	\noindent	
+	The idea behind motion estimation is to find the most similar part of two continuous frame, use the displacement of this two matched part as the motion vector.  Block Matching Algorithm (BMA) is a collection of block-based motion estimation algorithms.  BMA divide the whole video frame into non-overlapping small regions, usually called blocks, and assume that the motion within each block can be characterized by a simple parametric model, e.g., constant, affine or bilinear. If the block is sufficiently small, then we can get a quite accurate motion estimation. \\
+	In the discussion below, $\Lambda$ will denote the whole video frame. And we divide a frame into $ M $ blocks, we use $ \beta_{ij} $ to represent the \textit{i}-th row, \textit{j}-th column block. So the block partition should satisfy: 
+	\begin{displaymath}
+		\cup  \beta_{ij} = \Lambda, \textrm{and} \quad \beta_{ij}  \cap \beta_{i'j'} = \emptyset, i \ne i', j \ne j' .
+	\end{displaymath}
+	In this report, the block is always square shape. And we assume the motion in each block is constant, i.e., the entire block is in same motion, which is called \textit{block-wise translational model}. \\
+	The task of BMA is to find a single motion vector for each block. Given a block $ \beta $ in the anchor frame, motion estimation is to find a most matched block $ \beta' $ in the tracked frame so that the error between this two blocks is minimized. And the displacement vector \textbf{d} between this two blocks is the MV of the block in tracked frame. Since we simply adapt the block-wise translational model, estimated block can be represented as $ \beta_{es} = \beta_{an} + \textbf{d} $. So the error can be written as: 
+	\begin{displaymath}
+		\textit{E}(\textbf{d}_{m}, \forall 1 \leq m \leq M) = \sum_{m} \sum_{\beta \in \beta_{ij}} 
+		| \psi_{2}(\beta + \textbf{d}_{m}) - \psi_{1}(\beta) | ^ {p}
+	\end{displaymath}
+	where $ \psi $ represents the gray value, $ \psi_{2} $ for tracked frame, $ \psi_{1} $ for anchor frame.\\
+	Because all blocks in anchor frame is estimated independently, so the error minimizing problem is to minimize estimation error for each block, which is: 
+	\begin{displaymath}
+		\textit{E}_{m}(\textbf{d})_{M} = \sum_{\beta \in \beta_{ij}} | \psi_{2}(\beta + \textbf{d}_{m}) - \psi_{1}(\beta) | ^{p}
+	\end{displaymath}
+	To reduce computational load, the Mean Absolute Difference (MAD) error ( $ p = 1 $) is used in this report and the implement.
+	\subsection{Exhaustive Block Matching Algorithm}
+	Exhaustive Block Matching Algorithm (EBMA) is also called Full Search. It is the simplest but most computational expensive block matching algorithm of all.\\
+	For a given block $ \beta $ in the anchor frame, EBMA searches surrounding area of $ \beta $, compares $ \beta $ with all candidate blocks $ \beta_{can} $ in the tracked frame and find best matched candidate block $ \beta' $ with minimum error. Then the displacement between anchor block $ \beta $ and best matched block $ \beta' $ is the estimated motion vector. \\
+	In EBMA, search area can be parameterized by $ R_x $ pixels horizontally and $ R_y $ pixels vertically. Both $ R_x $ and $ R_y $ is symmetric with respect to the center of the anchor block $ \beta $. Usually the shaking is random either horizontally or vertically, so search area is a square area with $ R  = R_x = R_y $. \\
+	EBMA can be illustrated in Figure \ref{fig:EBMA}. \\
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{EBMA}
+	\caption[EBMA figure]{The search procedure of EBMA for one anchor block}
+	\label{fig:EBMA}
+	\end{figure}
+	
+	\noindent
+	For EBMA, the estimation accuracy can be specified by search step size, which is the distance between two nearby candidate blocks in the horizontal or vertical direction. 
+	In this report and the implement, the same step size is used in both directions. In most case, step size is one pixel and is called \textit{integer-pel accuracy search}. On the other hand, for those low resolution frame, a more accurate motion estimation is needed. So in this case, we will use fractional-pel accuracy search. But there exists a problem that there may not be corresponding candidate points in the tracked frame for certain sample anchor points. To realize a step size of $ 1/K $ pixel search, the tracked frame firstly needs to be resized by factor $ K $. Typically the $ K = 2 $, which is know as \textit{half-pel accuracy search}. Half-pel accuracy search is shown in Figure \ref{fig:half-EBMA}.
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{half-EBMA}
+	\caption[half EBMA]{Half-pel accuracy block matching. Filled circles are samples existing in the original tracked frame, open circles are samples to be interpolated for calculating the matching error.}
+	\label{fig:half-EBMA}
+	\end{figure}
+	
+	\noindent
+	Although EBMA can get a global optimal motion estimation and with half-pel accuracy search it can get more accurate, one obvious disadvantage of EBMA is that it requires intense computation when goes on with full search regardless of the possibility of candidate block to be the most matched block. \\
+	Because of the computation problem, several faster algorithms have been developed to get a trade-off between the estimation accuracy and computation efficiency.
+	
+	\subsection{2-D Log Search Method}
+	2-D Log Search Method is also known as Diamond Search. It is illustrated in Figure \ref{fig:ds}
+	
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\linewidth]{ds}
+	\caption{2-D Log Search Method. Search points start with black circles, end with gray circles.}
+	\label{fig:ds}
+	\end{figure}
+
+	\noindent
+	It starts from the position corresponding to zero-displacement of the anchor block. In each step, nine nearby points within diamond shape will be tested to get a best matched point. Then the center of search area will move to the best matched point resulting from the previous step and repeat the step. In 2-D log search method, the search step size, also represents the radius of the search diamond shape, is reduced by one if the best matched point is the center point of the diamond, or on the border of the search area. Otherwise, the step size will remain same in next search step.
+	The final step is reached when the step size reaches 1 pixel range. Usually the initial step size is set to be half of the max search range. \\
+	As the fact that the number of steps and the total number of search points depends on the actual motion vectors, there is no limit to the number of 2-D log search steps, so it could find global minimum accurately while the computation expense goes down quickly.
+	
+	\subsection{Three-Step Search Method}
+	As illustrated in Figure \ref{fig:tss}, the search starts with a step size equal to or slightly larger than half of the maximum search range. In each step, nine search points, which are in a square shape around the center of the previous search step, are compared. The step size is reduced by half after each step, and the search ends with step size reaches 1 pixel range. At each new step, the search center is moved to the best matched point resulting from the previous step.
+	
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\linewidth]{tss}
+	\caption{Three-Step Search Method. Search points start with black circle, end with black square.}
+	\label{fig:tss}
+	\end{figure}
+	
+	\noindent
+	Let $ R_{0} $ represent the initial search step size, there are at most $ L = \lfloor   \log_{2}{R_{0} + 1} \rfloor $ search step. At each search step, eight points are searched, except in the very first nine points searched. So the total number of search points is $ 8L + 1 $. For example, for a search range of $ R = 32 $, with EBMA, the total number of search points is $ (2*R+1)^2 = (2*32+1)^2 = 4225 $, whereas with three-step search method, the number is 41, ($ L = \lfloor   \log_{2}{R_{0} + 1} \rfloor = \lfloor   \log_{2}{\frac{32}{2} + 1} \rfloor = 5, 8*L+1 = 41$ ). Three-step search method is over 100 times efficient than EBMA.
+
+	%------------------------------------------------
+	
+	\section{Comparison}
 	
 	
 	%------------------------------------------------
 	
-	\section{Comparison and Experiment}
-	
-	
+	\section{Experiment}
+		
+		
 	%------------------------------------------------
 	
 	\section{Conclusion}
@@ -108,10 +192,15 @@
 	
 	\begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
 		
-		\bibitem[Video Processing and Communications, Chap. 6]{vpc}
+		\bibitem{vpc}
 		Wang Y, Ostermann J, Zhang Y Q. 
 		\newblock {\em Video processing and communications[M]. Chap. 6: Two Dimensional Motion Estimation}  
 		\newblock Upper Saddle River: Prentice Hall, 2002.
+		
+		\bibitem{abmvf}
+		Vella F, Castorina A, Mancuso M, et al. 
+		\newblock {\em Digital image stabilization by adaptive block motion vectors filtering[J].}
+		\newblock IEEE Transactions on Consumer Electronics, 2002, 48(3): 796-801.
 		
 	\end{thebibliography}
 	
