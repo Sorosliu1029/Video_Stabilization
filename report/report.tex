@@ -85,7 +85,7 @@
 	\end{itemize}
 	\noindent
 	Among all three steps, the most computationally expensive and resource consumed one is motion estimation. Some mature models are discussed in \cite{vpc}: based on optical flow, based on pixel, based on block, based on mesh, etc. \\
-	This report and video stabilization implement focus on block-based algorithm, start with naive and slow EBMA, to some other improved and faster algorithm. The algorithms that have been implemented are Exhaustive Block Matching Algorithm (EBMA), 2-D Log Search Method (a.k.a Diamond Search, DS), Three-Step Search Method (TSS). Multi-Resolution Motion Estimation with Hierarchical Block Matching Algorithm (HBMA) is also briefly introduced. Section II explains how these algorithms work. Section III makes a comparison between these algorithms. Section IV presents a way to recognize shaking and shows the video stabilization result with motion compensation.
+	This report and video stabilization implement focus on block-based algorithm, start with naive and slow EBMA, to some other improved and faster algorithm. The algorithms that have been implemented are Exhaustive Block Matching Algorithm (EBMA), 2-D Log Search Method (a.k.a Diamond Search, DS), Three-Step Search Method (TSS). Multi-Resolution Motion Estimation with Hierarchical Block Matching Algorithm (HBMA) is also introduced. Section II explains how these algorithms work. Section III makes a comparison between the first three algorithms. Section IV presents a way to recognize shaking and shows the video stabilization result with motion compensation.
 	
 	%------------------------------------------------
 	
@@ -170,7 +170,35 @@
 	
 	\noindent
 	Let $ R_{0} $ represent the initial search step size, there are at most $ L = \lfloor   \log_{2}{R_{0} + 1} \rfloor $ search step. At each search step, eight points are searched, except in the very first nine points searched. So the total number of search points is $ 8L + 1 $. For example, for a search range of $ R = 32 $, with EBMA, the total number of search points is $ (2*R+1)^2 = (2*32+1)^2 = 4225 $, whereas with three-step search method, the number is 41, ($ L = \lfloor   \log_{2}{R_{0} + 1} \rfloor = \lfloor   \log_{2}{\frac{32}{2} + 1} \rfloor = 5, 8*L+1 = 41$ ). Three-step search method is over 100 times efficient than EBMA.
+	
+	\subsection{Hierarchical Block Matching Algorithm}
+	Among above motion estimation method, there two major difficulties when obtaining the correct solution:
+	\begin{enumerate}
+		\item the minimization function usually has many local minimum and it is not easy to reach the global minimum.
+		\item the expense of computation is very high.
+	\end{enumerate}
+	To cope with above two problems, hierarchical block matching algorithm (HBMA) with multi-resolution approach is developed. It searches the optimal solution in successively finer resolutions, as illustrated in Figure \ref{fig:hbma}.
+	
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{hbma}
+	\caption{3-level hierarchical block matching algorithm}
+	\label{fig:hbma}
+	\end{figure}
 
+	\noindent
+	First, we get pyramid-like representations of anchor frame and tracked frame. Each level is a resized frame as  a reduced resolution representation, where bottom level is the original one. The higher the level is, the lower its resolution is. Typical resolution reduction factor between two successive levels is 2, both horizontally and vertically.Then the motion vectors between corresponding levels of the two pyramids is estimated, starting from the top coarsest level and processing to the lower finer level repeatedly.\\
+	Here we assume the same block size is used at different levels, so that the number of blocks is reduced by half in each dimension as well. Let the motion vector for block $ (i, j) $ as level $ l $ be denoted by $ \textbf{d}_{l, i, j} $. Starting from top level, we first find the motion vectors for all blocks in this level. At each lower level $ l > 1 $, for each block, its initial motion vector $ \widetilde{\textbf{d}}_{l, i, j} $ is interpolated from a corresponding block in level $ l - 1 $ by 
+	\begin{displaymath}
+		\widetilde{\textbf{d}}_{l, i, j} = 2*\textbf{d}_{l-1, \lfloor i/2 \rfloor, \lfloor j/2 \rfloor}
+	\end{displaymath}
+	Then within the search area, we search and get a correction vector $ \textbf{q}_{l, i, j} $, then make the correction to get the final estimated motion vector
+	\begin{displaymath}
+		\textbf{d}_{l, i, j} = \widetilde{\textbf{d}}_{l, i, j} + \textbf{q}_{l, i, j}
+	\end{displaymath}
+	We could notice that using a block with $ N $ size at level $ l $ corresponds to a block size of $ 2^{L-l} $ at the full resolution. Therefore, by using the same block size, serach range and step size at different levels, we actually use a larger block size, a larger search range and a larger step size in the beginning of the search, and then gradually half-reduce these three parameters in successive level steps.\\
+	The benefit of HBMA is that by first searching the solution in a coarse resolution, one can usually obtain a solution that is close to the true motion vector. In addition, by limiting the search area to a small neighborhood of the solution obtained in the previous resolution, the total number of searches can be reduced, compared to those required by directly searching in the finest resolution over a large range.
+	
 	%------------------------------------------------
 	
 	\section{Comparison}
@@ -194,13 +222,18 @@
 		
 		\bibitem{vpc}
 		Wang Y, Ostermann J, Zhang Y Q. 
-		\newblock {\em Video processing and communications[M]. Chap. 6: Two Dimensional Motion Estimation}  
+		\newblock {\em Video processing and communications[M]. Chap. 6: Two Dimensional Motion Estimation.}  
 		\newblock Upper Saddle River: Prentice Hall, 2002.
 		
 		\bibitem{abmvf}
 		Vella F, Castorina A, Mancuso M, et al. 
 		\newblock {\em Digital image stabilization by adaptive block motion vectors filtering[J].}
 		\newblock IEEE Transactions on Consumer Electronics, 2002, 48(3): 796-801.
+		
+		\bibitem{hbma}
+		Bierling M. 
+		\newblock {\em Displacement estimation by hierarchical blockmatching[C].}
+		\newblock Visual Communications and Image Processing'88: Third in a Series. International Society for Optics and Photonics, 1988: 942-953.
 		
 	\end{thebibliography}
 	
