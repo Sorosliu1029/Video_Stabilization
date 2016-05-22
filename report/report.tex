@@ -9,7 +9,7 @@
 
 \usepackage[hmarginratio=1:1,top=32mm,left=20mm,right=20mm,columnsep=20pt]{geometry} % Document margins
 \usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
-\usepackage{booktabs} % Horizontal rules in tables
+%\usepackage{booktabs} % Horizontal rules in tables
 
 \usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
 
@@ -250,13 +250,130 @@
 	%------------------------------------------------
 	
 	\section{Experiment}
-		
-		
+	\subsection{Block Motion Vectors}
+	With the implemented MATLAB code for EBMA, 2-D log search method, three-step search method and HBMA, we could get the following results showing the estimated motion vectors. We use 'red-cyan' color channel to distinguish anchor frame and tracked frame, red represents tracked frame and cyan represents anchor frame.
+	\begin{enumerate}
+		\item motion vectors from EBMA is in Figure \ref{fig:ebma-mv}
+		\item motion vectors from 2-D Log Search Method is in Figure \ref{fig:2dls-mv}
+		\item motion vectors from Three-Step Search Method is in Figure \ref{fig:tss-mv}
+	\end{enumerate}
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{ebma-mv}
+	\caption{Motion vector resulting from EBMA}
+	\label{fig:ebma-mv}
+	\end{figure}
+
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{2dls-mv}
+	\caption{Motion vector resulting from 2-D log search method}
+	\label{fig:2dls-mv}
+	\end{figure}
+
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{tss-mv}
+	\caption{Motion vector resulting from three-step search method}
+	\label{fig:tss-mv}
+	\end{figure}
+
+	\subsection{Global Motion Vector}
+	With the estimated motion vector of each block done by presented BMA, we could carry on with shaking recognition part.
+	From block motion vectors of a frame, we can evaluate a vector identifying unwanted movements. This vector summarizes the motion of the frame and is called Global Motion Vector (GMV).\\
+	One way to get GMV is simply letting the most frequent vector present in the block motion vectors be the GMV. This way assumes that most part of the frame undergoes the exactly same displacement. \\
+	But the drawback of BMA is that not all block motion vectors are reliable. For example, considering Figure \ref{fig:mad_diff} below, a homogeneous block in a homogeneous area can give a wrong motion vector as a poor match is found. In Figure \ref{fig:mad_diff}, block MAD is calculated by
+	\begin{equation}
+		MAD = \frac{1}{N^2} \sum_{j=0}^{N-1} \sum_{i=0}^{N-1} | Y_{i,j} - \bar{Y} |
+	\end{equation}
+	where $ \bar{Y} $ is the gray value average in the block. \\
+	So the lower the MAD of block $ \beta $ is, the more likely $ \beta $ is homogeneous.
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{mad_diff}
+	\caption{Different MAD to present homogeneousness}
+	\label{fig:mad_diff}
+	\end{figure}
+	
+	\noindent
+	With simple counting method to get GMV, a number of unreliable motion vectors might be used and will lead to wrong GMV result.\\
+	An improved way to get GMV is weighted counting. Different weights for the motion vector counting are considered. Homogeneous blocks will have a low weight while block with high MAD value will have a higher weight. In this way a most reliable block will be counted with more strength than a normal block.\\
+	Weight values are assigned considering that higher the MAD value is, the value must be the weight associated with its motion vector. In this report and its implement, we use a weight table \ref{tb:weight}.
+	
+	\begin{table}[h]
+		\caption{Weights for BMV}
+		\label{tb:weight}
+		\centering
+		\begin{tabular}{|c | c|}
+			\hline
+			\textbf{MAD} & \textbf{Weight} \\ 
+			\hline
+			MAD < 5 & 0 \\ 
+			\hline
+			5 $\leq$ MAD < 40 & 1 \\ 
+			\hline
+			40 $\leq$ MAD < 60 & 2 \\ 
+			\hline
+			60 $\leq$ MAD < 80 & 4 \\ 
+			\hline
+			80 $\leq$ MAD < 100 & 8 \\ 
+			\hline
+			MAD $\geq$100 & 16 \\
+			\hline
+		\end{tabular}
+	\end{table} 	
+	
+	\noindent
+	Now the most weighted motion vector will be chosen as the global motion vector.
+	
+	\subsection{Motion Compensation}
+	The above global motion vector of tracked frame corresponds to the anchor frame. To have a stabilization of the whole series of frames, the compensation must be done corresponding to a common reference frame, which in our case is the first frame of the video. So each tracked frame's global motion vector will accumulate to get the absolute global motion vector. Absolute GMV is considered as the vector referred to the absolute coordinate system. So the compensation will be done relying on this absolute GMV. \\
+	The final big problem in motion compensation is to distinguish between jiggling and panning. Jiggling is the shaking that lowers the video quality and need to be stabilized.
+	For most case, jiggling is in small scale and in random direction. Panning is intended movement by the video shooter and we want to keep panning movement in stabilized video. Unlike jiggling, panning is in coherent direction and in a bigger movement than jiggling. \\
+	In \cite{abmvf}, it uses absolute GMV and set a hard threshold to discriminate jiggling from panning.\\
+	Instead, in this report and its implement, we use another way to distinguish between jiggling and panning. When jiggling appears, the frame is changed by a little, which means the MAD values of anchor frame and tracked frame is almost the same. While in the panning, most of the frame will be moved out by a certain amount of pixels, leading to a quite large change in the MAD values of anchor frame and tracked frame. So we use the following judgment (Figure \ref{fig:judgment}) to judge whether the frame undergoes jiggling or panning. Here when encountering panning, we reset absolute GMV to switch to a new video context and consider the frame after panning as a new common reference frame.
+	 
+	 \begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\linewidth]{judgment}
+	\caption{Jiggling and Panning Judgment}
+	\label{fig:judgment}
+	\end{figure}
+	
+	\subsection{Final Result}
+	Here lists some captures of the stabilized video \ref{fig:f1}, \ref{fig:f2}, \ref{fig:f3}. Left is the original and right is the compensated.
+	
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{f1}
+	\caption{Original frame and compensated frame at the beginning of video}
+	\label{fig:f1}
+	\end{figure}
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{f2}
+	\caption{Original frame and compensated frame in the middle of the video}
+	\label{fig:f2}
+	\end{figure}
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{f3}
+	\caption{Original frame and compensated frame at the end of the video}
+	\label{fig:f3}
+	\end{figure}
+	
+	\noindent
+	The final stabilized video is available here: \href{https://youtu.be/YMaCjQ8-WY0}{Youtube} or \href{http://pan.baidu.com/s/1bGrkvW}{BaiduYun}: 
+
 	%------------------------------------------------
 	
 	\section{Conclusion}
+	Block Matching Algorithm is a widely used algorithm in video stabilization. Among three BMAs that we compare, EBMA is the most computationally expensive but most accurate one. Three-Step Search Method requires much less computational resource but decreases the quality of estimated motion vectors. 2-D Log Search Method gains a balance between computational expense and accuracy. HBMA develops a new idea about search blocks. \\
+	Global motion vector is generated by counting block motion vectors with different weights. Discrimination between jiggling and panning is considered by applying MAD value comparison.
 	
-	
+	\section{Acknowledgement}
+	MATLAB code used to generate the comparison results in section III is provided by \href{http://www.mathworks.com/matlabcentral/profile/authors/870112-aroh-barjatya}{\textit{Aroh Barjatya}} on \href{http://www.mathworks.com/matlabcentral/fileexchange/8761-block-matching-algorithms-for-motion-estimation}{\textit{MathWorks Community}}.
+
 	%----------------------------------------------------------------------------------------
 	%	REFERENCE LIST
 	%----------------------------------------------------------------------------------------
@@ -277,6 +394,11 @@
 		Bierling M. 
 		\newblock {\em Displacement estimation by hierarchical blockmatching[C].}
 		\newblock Visual Communications and Image Processing'88: Third in a Series. International Society for Optics and Photonics, 1988: 942-953.
+		
+		\bibitem{cr}
+		Engelsberg A, Schmidt G. 
+		\newblock {\em A comparative review of digital image stabilising algorithms for mobile video communications[J].}
+		\newblock Consumer Electronics, IEEE Transactions on, 1999, 45(3): 591-597.
 		
 	\end{thebibliography}
 	
