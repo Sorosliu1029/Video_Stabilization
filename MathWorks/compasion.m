@@ -1,0 +1,18 @@
+movie = VideoReader('shaky_car.avi');
+an_f = read(movie, 61);
+ta_f = read(movie, 62);
+an_f = rgb2gray(an_f);
+ta_f = rgb2gray(ta_f);
+mbSize = 16;
+p = 7;
+[motionVect, computations] = motionEstTSS(ta_f,an_f,mbSize,p);
+mvx = motionVect(2,:);
+mvy = motionVect(1,:);
+mvx = reshape(mvx, [20, 15])';
+mvy = reshape(mvy, [20, 15])';
+w = size(an_f, 2);
+h = size(an_f, 1);
+[sx, sy] = meshgrid(1:mbSize:w, 1:mbSize:h);
+imshowpair(ta_f, an_f, 'ColorChannels', 'red-cyan');
+hold on;
+quiver(sx, sy, -mvx, -mvy, 0.5, 'g');

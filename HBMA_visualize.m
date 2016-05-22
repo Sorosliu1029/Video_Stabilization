@@ -1,0 +1,10 @@
+v = VideoReader('shaky_car.avi');
+an_f = read(v, 62);
+ta_f = read(v, 61);
+h = v.Height;
+w = v.Width;
+bs = 16;
+rs = [-8, -8];
+re = [8,8];
+ds = true;
+HBMA(ta_f, an_f, h, w, bs, rs, re);
