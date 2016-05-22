@@ -113,9 +113,10 @@
 	\end{displaymath}
 	where $ \psi $ represents the gray value, $ \psi_{2} $ for tracked frame, $ \psi_{1} $ for anchor frame.\\
 	Because all blocks in anchor frame is estimated independently, so the error minimizing problem is to minimize estimation error for each block, which is: 
-	\begin{displaymath}
+	\begin{equation}
+		\label{eq:error}
 		\textit{E}_{m}(\textbf{d})_{M} = \sum_{\beta \in \beta_{ij}} | \psi_{2}(\beta + \textbf{d}_{m}) - \psi_{1}(\beta) | ^{p}
-	\end{displaymath}
+	\end{equation}
 	To reduce computational load, the Mean Absolute Difference (MAD) error ( $ p = 1 $) is used in this report and the implement.
 	\subsection{Exhaustive Block Matching Algorithm}
 	Exhaustive Block Matching Algorithm (EBMA) is also called Full Search. It is the simplest but most computational expensive block matching algorithm of all.\\
@@ -202,7 +203,49 @@
 	%------------------------------------------------
 	
 	\section{Comparison}
+	This comparison part mainly focuses on three BMA: EBMA, 2-D Log Search Method and Three-Step Search Method.
+	\subsection{Computation Expense}
+	As we already discussed in section II, EBMA is a most computation expensive algorithm, while 2-D log search method and three-step search method could drop the expense greatly. \\
+	 As shown in Figure \ref{fig:block}, in our comparison experiment, video has 32 frames, block is divided as $ 16*16 \textit{ } pel $ square and search area is set to be $ 7 \textit{ } pel $.\\
+	\begin{figure}[hb]
+	\centering
+	\includegraphics[width=1\linewidth]{block}
+	\caption{EBMA search block with 16 pel size and 7 pel range.}
+	\label{fig:block}
+	\end{figure}
 	
+	\noindent
+	Search points for a certain anchor block in EBMA is fixed once search range is fixed, in this case is $ (2*R+1)^2 = (2*7+1)^2=255 $ searches per block.\\
+	Since in each search of BMA, it is necessary to compute on the entire block to get MAD error value, we only need to compare the average search times per block of these three algorithms. And because the average search times of EBMA is one magnitude larger than the other two, we do not plot it in the result figure. So the computation expense comparison between 2-D log search method and three-step search step is plot in Figure \ref{fig:expense}.
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{expense}
+	\caption{Computation expense comparison between TSS and 2DLS}
+	\label{fig:expense}
+	\end{figure}
+	
+	\noindent
+	In Figure \ref{fig:expense}, we can see that 2-D log search method and three-step search method is actually one magnitude faster than EBMA. Meanwhile 2-D log search method is slightly faster than three-step search method, which means our experiment video undergoes small shaking.
+	
+	\subsection{Accuracy}
+	In equation \ref{eq:error}, when $ q = 2 $, then equation \ref{eq:error} goes to be Mean Square Error (MSE), which is also an error evaluation method. \\
+	Instead of the MSE, the \textit{peak signal to noise ratio} (PSNR) in decibel (dB) is more often used as a quality measure in video coding. The PSNR is defined as 
+	\begin{equation}
+		PSNR = 10 \log_{10} \frac{\psi_{max}^2}{MSE}
+	\end{equation}
+	where $ \psi_{max} $ is the peak (maximum) intensity value of the anchor frame.\\
+	PSNR value is used in our algorithm accuracy comparison. PSNR evaluates the quality of compensated frame resulting from estimated motion vectors. \\
+	In Figure \ref{fig:psnr} , we plot PSNR values of these three algorithms. 
+	\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\linewidth]{psnr}
+	\caption{Accuracy comparison between EBMA, TSS and 2DLS}
+	\label{fig:psnr}
+	\end{figure}
+
+	\noindent
+	In Figure \ref{fig:psnr}, we can see EBMA gets the highest PSNR value, which means it gets the most accurate compensated result. 2-D log search method gets a result close to the best one, which is caused by the unlimited search steps by this algorithm to able to get the global optimal motion vector. Three-step search method gets the worst compensated results in all frames because it only allows limited search steps, usually 3~4 times, and easily to get a local optimal motion vector.\\
+	So although EBMA is most computationally expensive and resource consumed, it could get best result. While three-step search method drop the search times dramatically, it might get a not so good result. 2-D log search method is a good trade-off between computational expense and accuracy.
 	
 	%------------------------------------------------
 	
