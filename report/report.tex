@@ -85,7 +85,7 @@
 	\end{itemize}
 	\noindent
 	Among all three steps, the most computationally expensive and resource consumed one is motion estimation. Some mature models are discussed in \cite{vpc}: based on optical flow, based on pixel, based on block, based on mesh, etc. \\
-	This report and video stabilization implement focus on block-based algorithm, start with naive and slow EBMA, to some other improved and faster algorithm. The algorithms that have been implemented are Exhaustive Block Matching Algorithm (EBMA), 2-D Log Search Method (a.k.a Diamond Search, DS), Three-Step Search Method (TSS). Multi-Resolution Motion Estimation with Hierarchical Block Matching Algorithm (HBMA) is also introduced. Section II explains how these algorithms work. Section III makes a comparison between the first three algorithms. Section IV presents a way to recognize shaking and shows the video stabilization result with motion compensation.
+	This report and video stabilization implement focus on block-based algorithm, starting with naive and slow EBMA, to some other improved and faster algorithm. The algorithms that have been implemented are Exhaustive Block Matching Algorithm (EBMA), 2-D Log Search Method (a.k.a Diamond Search, DS), Three-Step Search Method (TSS). Multi-Resolution Motion Estimation with Hierarchical Block Matching Algorithm (HBMA) is also introduced. Section II explains how these algorithms work. Section III makes a comparison between the first three algorithms. Section IV presents a way to recognize shaking and shows the video stabilization result with motion compensation.
 	
 	%------------------------------------------------
 	
@@ -115,13 +115,13 @@
 	Because all blocks in anchor frame is estimated independently, so the error minimizing problem is to minimize estimation error for each block, which is: 
 	\begin{equation}
 		\label{eq:error}
-		\textit{E}_{m}(\textbf{d})_{M} = \sum_{\beta \in \beta_{ij}} | \psi_{2}(\beta + \textbf{d}_{m}) - \psi_{1}(\beta) | ^{p}
+		\textit{E}_{m}(\textbf{d}_{m}) = \sum_{\beta \in \beta_{ij}} | \psi_{2}(\beta + \textbf{d}_{m}) - \psi_{1}(\beta) | ^{p}
 	\end{equation}
 	To reduce computational load, the Mean Absolute Difference (MAD) error ( $ p = 1 $) is used in this report and the implement.
 	\subsection{Exhaustive Block Matching Algorithm}
 	Exhaustive Block Matching Algorithm (EBMA) is also called Full Search. It is the simplest but most computational expensive block matching algorithm of all.\\
 	For a given block $ \beta $ in the anchor frame, EBMA searches surrounding area of $ \beta $, compares $ \beta $ with all candidate blocks $ \beta_{can} $ in the tracked frame and find best matched candidate block $ \beta' $ with minimum error. Then the displacement between anchor block $ \beta $ and best matched block $ \beta' $ is the estimated motion vector. \\
-	In EBMA, search area can be parameterized by $ R_x $ pixels horizontally and $ R_y $ pixels vertically. Both $ R_x $ and $ R_y $ is symmetric with respect to the center of the anchor block $ \beta $. Usually the shaking is random either horizontally or vertically, so search area is a square area with $ R  = R_x = R_y $. \\
+	In EBMA, search area can be parameterized by $ R_x $ pixels horizontally and $ R_y $ pixels vertically. Both $ R_x $ and $ R_y $ is symmetric with respect to the center of the anchor block $ \beta $. Usually the shaking is random both horizontally and vertically, so search area is a square area with $ R  = R_x = R_y $. \\
 	EBMA can be illustrated in Figure \ref{fig:EBMA}. \\
 	\begin{figure}[h]
 	\centering
@@ -160,7 +160,7 @@
 	As the fact that the number of steps and the total number of search points depends on the actual motion vectors, there is no limit to the number of 2-D log search steps, so it could find global minimum accurately while the computation expense goes down quickly.
 	
 	\subsection{Three-Step Search Method}
-	As illustrated in Figure \ref{fig:tss}, the search starts with a step size equal to or slightly larger than half of the maximum search range. In each step, nine search points, which are in a square shape around the center of the previous search step, are compared. The step size is reduced by half after each step, and the search ends with step size reaches 1 pixel range. At each new step, the search center is moved to the best matched point resulting from the previous step.
+	As illustrated in Figure \ref{fig:tss}, the search starts with a step size equal to or slightly larger than half of the maximum search range. In each step, nine search points, which are in a square shape around the center of the previous search step, are compared. The step size is reduced by half after each step, and the search ends with step size reaching 1 pixel range. At each new step, the search center is moved to the best matched point resulting from the previous step.
 	
 	\begin{figure}[h]
 	\centering
@@ -173,7 +173,7 @@
 	Let $ R_{0} $ represent the initial search step size, there are at most $ L = \lfloor   \log_{2}{R_{0} + 1} \rfloor $ search step. At each search step, eight points are searched, except in the very first nine points searched. So the total number of search points is $ 8L + 1 $. For example, for a search range of $ R = 32 $, with EBMA, the total number of search points is $ (2*R+1)^2 = (2*32+1)^2 = 4225 $, whereas with three-step search method, the number is 41, ($ L = \lfloor   \log_{2}{R_{0} + 1} \rfloor = \lfloor   \log_{2}{\frac{32}{2} + 1} \rfloor = 5, 8*L+1 = 41$ ). Three-step search method is over 100 times efficient than EBMA.
 	
 	\subsection{Hierarchical Block Matching Algorithm}
-	Among above motion estimation method, there two major difficulties when obtaining the correct solution:
+	Among above motion estimation methods, there two major difficulties when obtaining the correct solution:
 	\begin{enumerate}
 		\item the minimization function usually has many local minimum and it is not easy to reach the global minimum.
 		\item the expense of computation is very high.
@@ -188,7 +188,7 @@
 	\end{figure}
 
 	\noindent
-	First, we get pyramid-like representations of anchor frame and tracked frame. Each level is a resized frame as  a reduced resolution representation, where bottom level is the original one. The higher the level is, the lower its resolution is. Typical resolution reduction factor between two successive levels is 2, both horizontally and vertically.Then the motion vectors between corresponding levels of the two pyramids is estimated, starting from the top coarsest level and processing to the lower finer level repeatedly.\\
+	First, we get pyramid-like representations of anchor frame and tracked frame. Each level is a resized frame as  a reduced resolution representation, where bottom level is the original one. The higher the level is, the lower its resolution is. Typical resolution reduction factor between two successive levels is 2, both horizontally and vertically. Then the motion vectors between corresponding levels of the two pyramids is estimated, starting from the top coarsest level and processing to the lower finer level repeatedly.\\
 	Here we assume the same block size is used at different levels, so that the number of blocks is reduced by half in each dimension as well. Let the motion vector for block $ (i, j) $ as level $ l $ be denoted by $ \textbf{d}_{l, i, j} $. Starting from top level, we first find the motion vectors for all blocks in this level. At each lower level $ l > 1 $, for each block, its initial motion vector $ \widetilde{\textbf{d}}_{l, i, j} $ is interpolated from a corresponding block in level $ l - 1 $ by 
 	\begin{displaymath}
 		\widetilde{\textbf{d}}_{l, i, j} = 2*\textbf{d}_{l-1, \lfloor i/2 \rfloor, \lfloor j/2 \rfloor}
@@ -197,7 +197,7 @@
 	\begin{displaymath}
 		\textbf{d}_{l, i, j} = \widetilde{\textbf{d}}_{l, i, j} + \textbf{q}_{l, i, j}
 	\end{displaymath}
-	We could notice that using a block with $ N $ size at level $ l $ corresponds to a block size of $ 2^{L-l} $ at the full resolution. Therefore, by using the same block size, serach range and step size at different levels, we actually use a larger block size, a larger search range and a larger step size in the beginning of the search, and then gradually half-reduce these three parameters in successive level steps.\\
+	We could notice that using a block with $ N $ size at level $ l $ corresponds to a block size of $ 2^{L-l} * N$ at the full resolution. Therefore, by using the same block size, search range and step size at different levels, we actually use a larger block size, a larger search range and a larger step size in the beginning of the search, and then gradually half-reduce these three parameters in successive level steps.\\
 	The benefit of HBMA is that by first searching the solution in a coarse resolution, one can usually obtain a solution that is close to the true motion vector. In addition, by limiting the search area to a small neighborhood of the solution obtained in the previous resolution, the total number of searches can be reduced, compared to those required by directly searching in the finest resolution over a large range.
 	
 	%------------------------------------------------
@@ -216,7 +216,7 @@
 	
 	\noindent
 	Search points for a certain anchor block in EBMA is fixed once search range is fixed, in this case is $ (2*R+1)^2 = (2*7+1)^2=255 $ searches per block.\\
-	Since in each search of BMA, it is necessary to compute on the entire block to get MAD error value, we only need to compare the average search times per block of these three algorithms. And because the average search times of EBMA is one magnitude larger than the other two, we do not plot it in the result figure. So the computation expense comparison between 2-D log search method and three-step search step is plot in Figure \ref{fig:expense}.
+	Since in each search of BMA, it is necessary to compute on the entire block to get MAD error value, we only need to compare the average search times per block of these three algorithms. And because the average search times of EBMA is one magnitude larger than the other two, we do not plot it in the result figure. So the computation expense comparison between 2-D log search method and three-step search method is plot in Figure \ref{fig:expense}.
 	\begin{figure}[h]
 	\centering
 	\includegraphics[width=1\linewidth]{expense}
@@ -244,7 +244,7 @@
 	\end{figure}
 
 	\noindent
-	In Figure \ref{fig:psnr}, we can see EBMA gets the highest PSNR value, which means it gets the most accurate compensated result. 2-D log search method gets a result close to the best one, which is caused by the unlimited search steps by this algorithm to able to get the global optimal motion vector. Three-step search method gets the worst compensated results in all frames because it only allows limited search steps, usually 3~4 times, and easily to get a local optimal motion vector.\\
+	In Figure \ref{fig:psnr}, we can see EBMA gets the highest PSNR value, which means it gets the most accurate compensated result. 2-D log search method gets a result close to the best one, which is caused by the unlimited search steps by this algorithm to able to get the global optimal motion vector. Three-step search method gets the worst compensated results in all frames because it only allows limited search steps, usually 3$\sim$4 times, and easily to get a local optimal motion vector.\\
 	So although EBMA is most computationally expensive and resource consumed, it could get best result. While three-step search method drop the search times dramatically, it might get a not so good result. 2-D log search method is a good trade-off between computational expense and accuracy.
 	
 	%------------------------------------------------
@@ -281,12 +281,12 @@
 	\subsection{Global Motion Vector}
 	With the estimated motion vector of each block done by presented BMA, we could carry on with shaking recognition part.
 	From block motion vectors of a frame, we can evaluate a vector identifying unwanted movements. This vector summarizes the motion of the frame and is called Global Motion Vector (GMV).\\
-	One way to get GMV is simply letting the most frequent vector present in the block motion vectors be the GMV. This way assumes that most part of the frame undergoes the exactly same displacement. \\
+	One way to get GMV is simply letting the most frequent vector presented in the block motion vectors be the GMV. This way assumes that most part of the frame undergoes the exactly same displacement. \\
 	But the drawback of BMA is that not all block motion vectors are reliable. For example, considering Figure \ref{fig:mad_diff} below, a homogeneous block in a homogeneous area can give a wrong motion vector as a poor match is found. In Figure \ref{fig:mad_diff}, block MAD is calculated by
 	\begin{equation}
 		MAD = \frac{1}{N^2} \sum_{j=0}^{N-1} \sum_{i=0}^{N-1} | Y_{i,j} - \bar{Y} |
 	\end{equation}
-	where $ \bar{Y} $ is the gray value average in the block. \\
+	where $ \bar{Y} $ is the average gray value in the block. \\
 	So the lower the MAD of block $ \beta $ is, the more likely $ \beta $ is homogeneous.
 	\begin{figure}[h]
 	\centering
@@ -298,7 +298,7 @@
 	\noindent
 	With simple counting method to get GMV, a number of unreliable motion vectors might be used and will lead to wrong GMV result.\\
 	An improved way to get GMV is weighted counting. Different weights for the motion vector counting are considered. Homogeneous blocks will have a low weight while block with high MAD value will have a higher weight. In this way a most reliable block will be counted with more strength than a normal block.\\
-	Weight values are assigned considering that higher the MAD value is, the value must be the weight associated with its motion vector. In this report and its implement, we use a weight table \ref{tb:weight}.
+	Weight values are assigned considering that higher the MAD value is, the bigger must be the weight associated with its motion vector. In this report and its implement, we use a weight table \ref{tb:weight}.
 	
 	\begin{table}[h]
 		\caption{Weights for BMV}
@@ -369,7 +369,8 @@
 	
 	\section{Conclusion}
 	Block Matching Algorithm is a widely used algorithm in video stabilization. Among three BMAs that we compare, EBMA is the most computationally expensive but most accurate one. Three-Step Search Method requires much less computational resource but decreases the quality of estimated motion vectors. 2-D Log Search Method gains a balance between computational expense and accuracy. HBMA develops a new idea about search blocks. \\
-	Global motion vector is generated by counting block motion vectors with different weights. Discrimination between jiggling and panning is considered by applying MAD value comparison.
+	Global motion vector is generated by counting block motion vectors with different weights. Discrimination between jiggling and panning is considered by applying MAD value comparison. \\
+	One obvious drawback of block matching algorithm in video stabilization is that it could hardly stabilize rotation in the frame.
 	
 	\section{Acknowledgement}
 	MATLAB code used to generate the comparison results in section III is provided by \href{http://www.mathworks.com/matlabcentral/profile/authors/870112-aroh-barjatya}{\textit{Aroh Barjatya}} on \href{http://www.mathworks.com/matlabcentral/fileexchange/8761-block-matching-algorithms-for-motion-estimation}{\textit{MathWorks Community}}.
