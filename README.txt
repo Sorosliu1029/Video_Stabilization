@@ -15,5 +15,9 @@ visualise_BMV.m is used to show block motion vectors.
 
 experiment video is ‘shaky_car.avi’, which is provided by MATLAB R2015b. It could be found in path: /Applications/MATLAB_R2015b.app/toolbox/vision/visiondata/shaky_car.avi
 
+report.pptx is the class representation for this course project.
+
+demo2 is better than demo1.
+
 Liu Yang
 22 May, 2016

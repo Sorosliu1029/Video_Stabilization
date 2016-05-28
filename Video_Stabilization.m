@@ -2,9 +2,9 @@
 clear;
 close all;
 input_video = 'shaky_car.avi';
-output_video = 'demo.avi';
-start_frame = 1;
-number_frame = 120;
+output_video = 'demo2.avi';
+start_frame = 61;
+number_frame = 60;
 search_range = 7;
 accuracy = 1;
 block_size = 16;
