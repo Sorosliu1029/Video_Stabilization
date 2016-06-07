@@ -13,18 +13,20 @@ function stabilize(read_video_path, write_video_path, ...
 tic
 movie = VideoReader(read_video_path);
 %% calculate block motion vectors for all frames
+disp('start to calculate block motion vectors')
 mvfs = EBMA(movie, range, accuracy, start_frame, num_frames, block_size);
 toc
-save mvfs.mat -struct mvfs;
+% save mvfs.mat -struct mvfs;
 mvx = mvfs.mvx;
 mvy = mvfs.mvy;
 mad = mvfs.mad;
 mvmad = mvfs.mvmad;
+disp('block motion vectors calculation done')
 
 %% show motion vector between two frames
-frame_idx = 5;
-visualise_BMV(movie, mvx(:,:,frame_idx), mvy(:,:,frame_idx), ...
-    frame_idx+start_frame-1, block_size);
+% frame_idx = 5;
+% visualise_BMV(movie, mvx(:,:,frame_idx), mvy(:,:,frame_idx), ...
+%     frame_idx+start_frame-1, block_size);
 
 %% Deal with each frame
 % initialize
@@ -49,7 +51,7 @@ w = movie.Width;
 to_f_h = h + 20;
 to_f_w = w * 2 + 30;
 to_f = zeros(to_f_h, to_f_w, 3);
-aviwriter = VideoWriter(write_video_path, 'Uncompressed AVI');
+aviwriter = VideoWriter(write_video_path, 'MPEG-4');
 open(aviwriter);
 for i=1:num_frames-1
     to_f(11:10+h,11:10+w,:) = an_fs(:,:,:,i);

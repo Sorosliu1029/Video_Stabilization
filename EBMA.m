@@ -12,7 +12,9 @@ function [mvfs] = EBMA(movie, r, accuracy, sf, nf, s)
 % mvfs: motion vectors for all frames
 
 %% initialize variables
+disp('start reading')
 fs = read(movie, [sf, sf+nf-1]);         % frame sequence of interest
+disp('reading done')
 h = movie.Height;
 w = movie.Width;
 
